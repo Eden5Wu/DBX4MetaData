@@ -105,8 +105,6 @@ procedure TForm2.btnCRAutoIncClick(Sender: TObject);
 var
   p_Start, p_Cost : DWORD;
   Dbx: TDBXConnection;
-  Meta: TDBXMetaDataProvider;
-  Cols: TDBXColumnsTableStorage;
   Cmd: TDBXCommand;
   R: TDBXReader;
   LTempStr: string;
@@ -124,8 +122,6 @@ begin
     if R.Value[TDBXColumnsIndex.IsAutoIncrement].AsBoolean then
       Memo1.Lines.Add(R.Value[TDBXColumnsColumns.ColumnName].AsString);
   end;
-  Cols.Free;
-  Meta.Free;
   R.Free;
   Cmd.Free;
   Dbx.Free;
@@ -377,7 +373,7 @@ end;
 
 procedure TForm2.FormCreate(Sender: TObject);
 begin
-  TDBXMSSQLFactory.FillConnectionParams(cn, '127.0.0.1', 'ADBDEMOS', 'SA_EDEN', 'IL@veEDEN');
+  TDBXMSSQLFactory.FillConnectionParams(cn, '127.0.0.1', 'EdenDemos', 'SA_Eden', 'IL@veEden!');
   cn.Open;
   cn.GetTableNames(cbxTableName.Items);
 end;
