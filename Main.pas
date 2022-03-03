@@ -3,9 +3,8 @@
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, DB, StdCtrls,
-  SqlExpr, DBXDevartSQLServer,  DBXCommon, DBXMetaDataNames, DBXMSSQL;
+  DBXCommon, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
+  Forms, Dialogs, DB, StdCtrls, SqlExpr, DBXMetaDataNames, DBXMSSQL;
 
 type
   TForm2 = class(TForm)
