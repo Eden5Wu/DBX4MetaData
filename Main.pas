@@ -372,7 +372,7 @@ end;
 
 procedure TForm2.FormCreate(Sender: TObject);
 begin
-  TDBXMSSQLFactory.FillConnectionParams(cn, '127.0.0.1', 'EdenDemos', 'SA_Eden', 'IL@veEden!');
+  TDBXMSSQLFactory.FillConnectionParams(cn, '127.0.0.1', 'EdenDemos', 'SA_Eden', 'IL@veEden!', False);
   cn.Open;
   cn.GetTableNames(cbxTableName.Items);
 end;

@@ -94,7 +94,7 @@ type
     property ConnectionProps: TDBXProperties read FConnectionProps;
     class procedure FillConnectionParams(AConnection: TSQLConnection;
       const AHost: string; const ADBName: string; const AUserName: string;
-      const APassword: string; const CustomString: string='');
+      const APassword: string; const OSAuthentication: Boolean=False);
   end;
 
 implementation
@@ -106,7 +106,7 @@ const MSSQL_CONNECTION_STRING = ''
   +'%s=MSSQL;%s=%s;%s=%s;%s=%s;%s=%s'
   +';SchemaOverride=%%.dbo;BlobSize=-1;ErrorResourceFile=;LocaleCode=0000'
   +';IsolationLevel=ReadCommitted;OS Authentication=%s;Prepare SQL=True'
-  +';ConnectTimeout=60;Mars_Connection=False';
+  +';ConnectTimeout=60;Mars_Connection=True';
 
 /// <summary> fixed: Cursor not returned from Query </summary>
 const SET_NOCOUNT_ON = 'SET NOCOUNT ON;'#13#10;
@@ -545,8 +545,8 @@ begin
 end;
 
 class procedure TDBXMSSQLFactory.FillConnectionParams(
-  AConnection: TSQLConnection; const AHost, ADBName, AUserName, APassword,
-  CustomString: string);
+  AConnection: TSQLConnection; const AHost, ADBName, AUserName, APassword:
+  string; const OSAuthentication: Boolean=False);
 begin
 //  AConnection.GetDriverFunc := 'getSQLDriverMSSQL';
 //  AConnection.LibraryName := 'dbxmss.dll';
@@ -562,12 +562,11 @@ begin
   AConnection.Params.Add('ErrorResourceFile=');
   AConnection.Params.Add('LocaleCode=0000');
   AConnection.Params.Add('IsolationLevel=ReadCommitted');
-  AConnection.Params.Add('OS Authentication=False');
+  AConnection.Params.Add('OS Authentication=' +
+    IfThen(OSAuthentication,'True','False'));
   AConnection.Params.Add('Prepare SQL=True');
   AConnection.Params.Add('ConnectTimeout=60');
-  AConnection.Params.Add('Mars_Connection=False');
-  if (CustomString<>'') then
-    AConnection.Params.Add('ConnectionString=' + CustomString);
+  AConnection.Params.Add('Mars_Connection=True');
 end;
 
 function TDBXMSSQLFactory.FillParameters(AParams: TDBXParameterList;
