@@ -155,27 +155,25 @@ object Form2: TForm2
     OnCloseUp = cbxIndexesCloseUp
   end
   object cn: TSQLConnection
-    ConnectionName = 'MSSQLCONNECTION'
-    DriverName = 'MSSQL'
-    GetDriverFunc = 'getSQLDriverMSSQL'
-    LibraryName = 'dbxmss.dll'
+    ConnectionName = 'Devart SQL Server Direct'
+    DriverName = 'DevartSQLServerDirect'
+    GetDriverFunc = 'getSQLDriverSQLServerDirect'
+    LibraryName = 'dbexpsda40.dll'
     LoginPrompt = False
     Params.Strings = (
-      'SchemaOverride=sa.dbo'
-      'DriverName=MSSQL'
-      'HostName=ServerName'
-      'DataBase=Database Name'
-      'User_Name=user'
-      'Password=password'
       'BlobSize=-1'
-      'ErrorResourceFile='
-      'LocaleCode=0000'
-      'IsolationLevel=ReadCommitted'
-      'OS Authentication=False'
-      'Prepare SQL=False'
-      'ConnectTimeout=60'
-      'Mars_Connection=False')
-    VendorLib = 'sqlncli10.dll'
+      'SchemaOverride=%.dbo'
+      'HostName=.\SQLEXPRESS'
+      'DataBase=DBDEMOS'
+      'DriverName=DevartSQLServerDirect'
+      'User_Name='
+      'Password='
+      'LongStrings=True'
+      'EnableBCD=True'
+      'FetchAll=True'
+      'UseUnicode=True'
+      'IPVersion=IPv4')
+    VendorLib = 'not used'
     Left = 36
     Top = 18
   end

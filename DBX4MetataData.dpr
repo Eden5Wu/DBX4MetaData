@@ -3,7 +3,7 @@ program DBX4MetataData;
 uses
   Forms,
   Main in 'Main.pas' {Form2},
-  DBExpress.MSSQL.Factory in 'DBExpress.MSSQL.Factory.pas';
+  EdenSqlExprHelper in 'EdenSqlExprHelper.pas';
 
 {$R *.res}
 

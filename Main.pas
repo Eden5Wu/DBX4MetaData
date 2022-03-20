@@ -4,7 +4,8 @@ interface
 
 uses
   DBXCommon, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, DB, StdCtrls, SqlExpr, DBXMetaDataNames, DBXMSSQL;
+  Forms, Dialogs, DB, StdCtrls, SqlExpr, DBXMetaDataNames, DBXMSSQL,
+  DBXDevartSQLServer;
 
 type
   TForm2 = class(TForm)
@@ -53,7 +54,7 @@ function DBXGetConnection(const AParams: TStrings): TDBXConnection; overload;
 implementation
 
 uses
-  DBXMetaDataProvider, DBXTypedTableStorage, DBExpress.MSSQL.Factory;
+  EdenSqlExprHelper;
 
 {$R *.dfm}
 
@@ -103,41 +104,12 @@ end;
 procedure TForm2.btnCRAutoIncClick(Sender: TObject);
 var
   p_Start, p_Cost : DWORD;
-  Dbx: TDBXConnection;
-  Cmd: TDBXCommand;
-  R: TDBXReader;
-  LTempStr: string;
 begin
   Memo1.Clear();
   p_Start:=GetTickCount();
-  Dbx := DBXGetConnection(cn.Params);
-  Cmd := Dbx.CreateCommand;
-  Cmd.CommandType := TDBXCommandTypes.DbxMetaData;
-  Cmd.Text := TDBXMetaDataCommands.GetColumns + ' ' + cbxTableName.Text;
-  R := Cmd.ExecuteQuery;
-  while R.Next do
-  begin
-    // Index performance is HIGH!
-    if R.Value[TDBXColumnsIndex.IsAutoIncrement].AsBoolean then
-      Memo1.Lines.Add(R.Value[TDBXColumnsColumns.ColumnName].AsString);
-  end;
-  R.Free;
-  Cmd.Free;
-  Dbx.Free;
+  Memo1.Lines.CommaText := cn.FetchAutoIncFieldNames(cbxTableName.Text);
   p_Cost:=GetTickCount()-p_Start;
   OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
-(*
-  The unit DBXMetaDataNames has been provided to read metadata.
-  The dbExpress class TDBXMetaDataCommands provides a set of constants
-  to read various types of metadata.
-  Set the Data.DBXCommon.TDBXCommand.CommandType property to
-    Data.DBXCommon.TDBXCommandTypes.DBXMetadata and
-    set Data.DBXCommon.TDBXCommand.Text to one of the constants
-    in TDBXMetaDataCommands to acquire the designated metadata.
-  Data.DBXCommon.TDBXCommand.ExecuteQuery returns a Data.DBXCommon.TDBXReader
-  to access the metadata. The new classes in DBXMetaDataNames describe
-  and provide access to this metadata's columns.
-*)
 end;
 
 procedure TForm2.btnCRPrimaryKeyColumnsClick(Sender: TObject);
@@ -145,11 +117,7 @@ var
   p_Start, p_Cost : DWORD;
 begin
   p_Start:=GetTickCount();
-  with TDBXMSSQLFactory.Create(cn.Params) do
-  begin
-    Memo1.Lines.CommaText := DBXFetchPrimaryKeyColumns(cbxTableName.Text);
-    Free;
-  end;
+  Memo1.Lines.CommaText := cn.FetchKeyFieldNames(cbxTableName.Text, True);
   p_Cost:=GetTickCount()-p_Start;
   OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
 end;
@@ -159,11 +127,7 @@ var
   p_Start, p_Cost : DWORD;
 begin
   p_Start:=GetTickCount();
-  with TDBXMSSQLFactory.Create(cn.Params) do
-  begin
-    Memo1.Lines.CommaText := DBXFetchPrimaryKeyColumnsWithoutAutoInc(cbxTableName.Text);
-    Free;
-  end;
+  Memo1.Lines.CommaText := cn.FetchKeyFieldNames(cbxTableName.Text, False);
   p_Cost:=GetTickCount()-p_Start;
   OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
 end;
@@ -275,62 +239,22 @@ end;
 
 procedure TForm2.btnCRForeignKeyClick(Sender: TObject);
 var
-  LCommand: TDBXCommand;
-  LReader: TDBXReader;
+  p_Start, p_Cost : DWORD;
 begin
-  Memo1.Clear();
-  LCommand := cn.DBXConnection.CreateCommand;
-  try
-    LCommand.CommandType := TDBXCommandTypes.DbxMetaData;
-    LCommand.Text := TDBXMetaDataCommands.GetForeignKeys + ' ' + cbxTableName.Text;
-    LReader := LCommand.ExecuteQuery;
-    try
-      while LReader.Next do
-      begin
-        Memo1.Lines.Add(LReader.Value[TDBXForeignKeysIndex.ForeignKeyName].AsString);
-        btnCRForeignKeyColumnsClick(btnCRForeignKeyColumns);
-//        try
-//          ATableInfo.AddForeignKey(LForeignKeyInfo);
-//          SetForeignKeyColumns(LForeignKeyInfo);
-//        except
-//          FreeAndNil(LForeignKeyInfo);
-//          raise;
-//        end;
-      end;
-    finally
-      FreeAndNil(LReader);
-    end;
-  finally
-    FreeAndNil(LCommand);
-  end;
+  p_Start:=GetTickCount();
+  Memo1.Lines.CommaText := cn.FetchFKIndexes(cbxTableName.Text);
+  p_Cost:=GetTickCount()-p_Start;
+  OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
 end;
 
 procedure TForm2.btnCRForeignKeyColumnsClick(Sender: TObject);
 var
-  LCommand: TDBXCommand;
-  LReader: TDBXReader;
+  p_Start, p_Cost : DWORD;
 begin
-  if Memo1.Lines.Count = 0 then
-    Exit;
-  LCommand := cn.DBXConnection.CreateCommand;
-  try
-    LCommand.CommandType := TDBXCommandTypes.DbxMetaData;
-    LCommand.Text := TDBXMetaDataCommands.GetForeignKeyColumns + ' '
-      + cbxTableName.Text + ' ' + Memo1.Lines.Strings[Memo1.Lines.Count-1];
-    LReader := LCommand.ExecuteQuery;
-    try
-      while LReader.Next do
-      begin
-        Memo1.Lines.Add(LReader.Value[TDBXForeignKeyColumnsIndex.PrimaryTableName].AsString);
-        Memo1.Lines.Add(LReader.Value[TDBXForeignKeyColumnsIndex.ColumnName].AsString);
-        Memo1.Lines.Add(LReader.Value[TDBXForeignKeyColumnsIndex.PrimaryColumnName].AsString);
-      end;
-    finally
-      FreeAndNil(LReader);
-    end;
-  finally
-    FreeAndNil(LCommand);
-  end;
+  p_Start:=GetTickCount();
+  Memo1.Lines.CommaText := cn.FetchFKFieldNames(cbxTableName.Text);
+  p_Cost:=GetTickCount()-p_Start;
+  OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
 end;
 
 procedure TForm2.Button5Click(Sender: TObject);
@@ -346,33 +270,27 @@ end;
 procedure TForm2.cbxIndexesCloseUp(Sender: TObject);
 var
   p_Start, p_Cost : DWORD;
-  LFactory: TDBXMSSQLFactory;
 begin
   p_Start:=GetTickCount();
-  LFactory := TDBXMSSQLFactory.Create(cn.Params);
-  Memo1.Lines.CommaText := LFactory.DBXFetchIndexColumns(cbxTableName.Text, TComboBox(Sender).Text);
+  Memo1.Lines.CommaText := cn.FetchIndexFieldNames(cbxTableName.Text, TComboBox(Sender).Text);
   p_Cost:=GetTickCount()-p_Start;
   OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
-  LFactory.Free;
 end;
 
 procedure TForm2.cbxTableNameCloseUp(Sender: TObject);
 var
   p_Start, p_Cost : DWORD;
-  LFactory: TDBXMSSQLFactory;
 begin
   cbxIndexes.Items.Clear;
   p_Start:=GetTickCount();
-  LFactory := TDBXMSSQLFactory.Create(cn.Params);
-  cbxIndexes.Items.CommaText := LFactory.DBXFetchIndexes(TComboBox(Sender).Text);
+  cbxIndexes.Items.CommaText := cn.FetchIndexes(TComboBox(Sender).Text);
   p_Cost:=GetTickCount()-p_Start;
   OutputDebugString(PWideChar('spend time: '+format('%0.3n',[p_Cost/1000])+'s'));
-  LFactory.Free;
 end;
 
 procedure TForm2.FormCreate(Sender: TObject);
 begin
-  TDBXMSSQLFactory.FillConnectionParams(cn, '127.0.0.1', 'EdenDemos', 'SA_Eden', 'IL@veEden!', False);
+  cn.FillConnectionParams('.\SQLEXPRESS', 'DBDEMOS', '', '');
   cn.Open;
   cn.GetTableNames(cbxTableName.Items);
 end;
